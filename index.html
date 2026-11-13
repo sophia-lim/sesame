@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sesame</title>
+<meta name="description" content="Know the garage is shut before you reach the gate.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="styles.css">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sesame">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#6f9fd0">
+</head>
+<body>
+
+<!-- ==================== SETUP / PAIRING ==================== -->
+<section id="setup" class="screen setup" hidden>
+  <div class="setup-inner">
+    <div class="brand-mark" aria-hidden="true"></div>
+    <h1>Sesame</h1>
+    <p class="setup-lede">“Open Sesame.” Know the garage is shut before you reach the gate.</p>
+
+    <div id="setup-install" class="setup-card warn" hidden>
+      <h2>Add Sesame to your Home Screen first</h2>
+      <p>
+        iPhones only allow notifications for apps added to the Home Screen.
+        Open this page in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b> —
+        and open Sesame from that icon before setting up.
+      </p>
+      <p class="setup-note">Skipping this means alerts silently never arrive.</p>
+    </div>
+
+    <div class="setup-card">
+      <h2>Pair this phone</h2>
+      <p>On the home PC, run <code>python -m watcher pair --user yourname</code> and scan the QR code it prints — or paste the link it shows here.</p>
+      <input id="pair-input" type="text" inputmode="url" autocapitalize="off" autocomplete="off"
+             spellcheck="false" placeholder="Paste the pairing link">
+      <button id="pair-go" class="btn-primary">Pair</button>
+      <p id="pair-error" class="setup-error" hidden></p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MAIN APP ==================== -->
+<main id="app" class="screen" hidden>
+
+  <header class="nav">
+    <div class="nav-left">
+      <div class="brand-mark small" aria-hidden="true"></div>
+      <h1>Sesame</h1>
+    </div>
+    <button id="tab-settings-btn" class="icon-btn" aria-label="Settings">
+      <svg viewBox="0 0 19 19" width="19" height="19" aria-hidden="true">
+        <circle cx="9.5" cy="9.5" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <g stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <path d="M9.5 1.5v2.4M9.5 15.1v2.4M1.5 9.5h2.4M15.1 9.5h2.4M3.9 3.9l1.7 1.7M13.4 13.4l1.7 1.7M15.1 3.9l-1.7 1.7M5.6 13.4l-1.7 1.7"/>
+        </g>
+      </svg>
+    </button>
+  </header>
+
+  <!-- ---------- STATUS ---------- -->
+  <section id="view-status" class="view">
+    <div id="hero" class="hero state-unknown">
+      <div class="hero-eyebrow">
+        <span class="dot"></span>
+        <span id="hero-eyebrow-text">NO READING YET</span>
+      </div>
+      <div class="hero-main">
+        <div class="hero-text">
+          <div id="hero-state" class="hero-state">Unknown</div>
+          <div id="hero-sub" class="hero-sub">Waiting for the first check</div>
+        </div>
+        <div class="hero-glyph" aria-hidden="true">
+          <svg id="door-glyph" width="86" height="74" viewBox="0 0 86 74">
+            <rect x="9" y="6" width="68" height="56" rx="4" fill="var(--door-fill)" stroke="var(--door-line)" stroke-width="2.4"/>
+            <line x1="9" y1="20" x2="77" y2="20" stroke="var(--door-slat)" stroke-width="2.4"/>
+            <line x1="9" y1="34" x2="77" y2="34" stroke="var(--door-slat)" stroke-width="2.4"/>
+            <line x1="9" y1="48" x2="77" y2="48" stroke="var(--door-slat)" stroke-width="2.4"/>
+            <rect x="3" y="62" width="80" height="7" rx="3" fill="var(--door-line)"/>
+          </svg>
+        </div>
+      </div>
+      <button id="check-now" class="btn-check">
+        <svg class="check-icon" width="19" height="19" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 12 A8 8 0 1 1 12 4 M12 4 L12 0.5 M12 4 L15.5 4"
+                stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        <span id="check-now-label">Check now</span>
+      </button>
+    </div>
+
+    <div id="push-nag" class="banner" hidden>
+      <div>
+        <b>Notifications are off.</b>
+        <span>You won't be alerted when the garage can't be confirmed.</span>
+      </div>
+      <button id="enable-push" class="btn-small">Turn on</button>
+    </div>
+
+    <h2 class="section-label">Recent activity</h2>
+    <div id="activity" class="card list">
+      <div class="empty">Nothing yet. Checks appear here as they happen.</div>
+    </div>
+  </section>
+
+  <!-- ---------- HISTORY ---------- -->
+  <section id="view-history" class="view" hidden>
+    <h2 class="section-label">History</h2>
+    <div id="history" class="card list">
+      <div class="empty">No history yet.</div>
+    </div>
+    <p class="fineprint">
+      History comes from the last 7 days the broker has cached. The home PC keeps
+      the permanent log.
+    </p>
+  </section>
+
+  <!-- ---------- SETTINGS ---------- -->
+  <section id="view-settings" class="view" hidden>
+    <h2 class="section-label">This phone</h2>
+    <div class="card">
+      <label class="row stacked">
+        <span class="row-label">Name on alerts</span>
+        <input id="set-user" type="text" autocapitalize="words" spellcheck="false">
+      </label>
+      <div class="row">
+        <span class="row-label">Notifications</span>
+        <span id="push-state" class="row-value">—</span>
+      </div>
+      <button id="re-register" class="btn-secondary">Re-register for notifications</button>
+      <button id="send-test" class="btn-secondary">Send a test check</button>
+    </div>
+
+    <h2 class="section-label">Connection</h2>
+    <div class="card">
+      <div class="row"><span class="row-label">Broker</span><span id="set-base" class="row-value">—</span></div>
+      <div class="row"><span class="row-label">Topics</span><span id="set-secret" class="row-value">—</span></div>
+      <div class="row"><span class="row-label">Live link</span><span id="set-live" class="row-value">—</span></div>
+    </div>
+
+    <h2 class="section-label">About</h2>
+    <div class="card">
+      <p class="about">
+        Sesame never says “Closed” unless the camera positively saw the tag on
+        the door. An open door, a dark frame, a sleeping PC, or a camera that
+        won't answer all come out the same way: <b>couldn't confirm</b>. It is
+        built to nag rather than reassure you wrongly.
+      </p>
+      <p class="about muted">
+        This app has no way to open or close the door — by design.
+      </p>
+      <button id="reset" class="btn-danger">Unpair this phone</button>
+    </div>
+  </section>
+
+  <!-- ---------- TAB BAR ---------- -->
+  <nav class="tabbar">
+    <button class="tab active" data-view="status">
+      <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="12" r="2.6" fill="currentColor"/>
+      </svg>
+      <span>Status</span>
+    </button>
+    <button class="tab" data-view="history">
+      <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true">
+        <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>History</span>
+    </button>
+    <button class="tab" data-view="settings">
+      <svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true">
+        <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+</main>
+
+<div id="toast" class="toast" hidden></div>
+
+<script src="app.js"></script>
+</body>
+</html>
