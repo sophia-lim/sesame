@@ -277,13 +277,13 @@ function isIOS() {
 
 async function registerPush({ silent = false } = {}) {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    // On iOS, PushManager simply does not exist in Safari - it appears only
-    // once the app is opened from its Home Screen icon. Saying "this browser
-    // cannot receive notifications" is true but useless; the user needs to
-    // know they are one step away, in the wrong window.
+    // On iOS, PushManager does not exist in any browser tab - Safari or
+    // Chrome alike. It appears only when the page is running as a Home
+    // Screen web app. "This browser cannot receive notifications" is true
+    // but useless: the user is one step away, in the wrong window.
     if (!silent) {
       toast(isIOS() && !isInstalled()
-        ? 'Open Sesame from its Home Screen icon and pair there \u2014 iPhones only allow notifications in the installed app, not in Safari.'
+        ? 'Open Sesame from its Home Screen icon and pair there \u2014 iPhones only allow notifications in the installed app, never in a browser tab.'
         : 'This browser cannot receive notifications.', 7000);
     }
     return false;
@@ -340,19 +340,20 @@ function updatePushUI() {
   const granted = supported && Notification.permission === 'granted';
   $('push-nag').hidden = granted;
 
-  // Pairing in Safari leaves someone with a working-looking app that can
-  // never alert them, so say so where they will see it.
-  const inSafari = isIOS() && !isInstalled();
+  // Any browser can install the app on iOS; what matters is that it is run
+  // from the Home Screen icon. Pairing in a tab leaves someone with a
+  // working-looking app that can never alert them, so say so plainly.
+  const inBrowserTab = isIOS() && !isInstalled();
   const nag = $('push-nag');
-  if (inSafari) {
+  if (inBrowserTab) {
     nag.querySelector('div').innerHTML =
-      '<b>You are in Safari.</b><span>Add Sesame to your Home Screen and pair there, ' +
-      'or you will never get alerts.</span>';
+      '<b>This is a browser tab.</b><span>Add Sesame to your Home Screen and pair ' +
+      'from that icon, or you will never get alerts.</span>';
     nag.querySelector('button').hidden = true;
   }
 
   const el = $('push-state');
-  if (inSafari) { el.textContent = 'needs the Home Screen app'; el.className = 'row-value bad'; }
+  if (inBrowserTab) { el.textContent = 'needs the Home Screen app'; el.className = 'row-value bad'; }
   else if (!supported) { el.textContent = 'not supported'; el.className = 'row-value bad'; }
   else if (granted) { el.textContent = 'on'; el.className = 'row-value good'; }
   else if (Notification.permission === 'denied') {
