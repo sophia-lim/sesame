@@ -93,9 +93,13 @@ const STATE_COPY = {
     eyebrow: 'CONFIRMED CLOSED', title: 'Closed',
     sub: (e) => `Confirmed ${ago(e.at)} · you're all set`,
   },
-  unconfirmed: {
-    eyebrow: "COULDN'T CONFIRM", title: "Couldn't confirm",
-    sub: () => 'Check it — the camera never saw the tag',
+  not_closed: {
+    eyebrow: 'NOT CLOSED', title: 'Not closed',
+    sub: () => 'The camera saw the door and the tag was not there',
+  },
+  cant_check: {
+    eyebrow: "CAN'T CHECK", title: "Can't check",
+    sub: () => 'No picture — camera or PC may be off',
   },
   checking: {
     eyebrow: 'CHECKING', title: 'Checking…',
@@ -111,6 +115,11 @@ const STATE_COPY = {
   },
 };
 
+/** Older versions wrote one lumped 'unconfirmed'; show those as not_closed. */
+function normaliseState(s) {
+  return s === 'unconfirmed' ? 'not_closed' : s;
+}
+
 function currentState() {
   const e = latest();
   if (!e) return 'unknown';
@@ -123,7 +132,7 @@ function currentState() {
   // Deliberately NOT shown as "closed": an old confirmation is not a
   // current one, and this app must never imply reassurance it doesn't have.
   if (Date.now() / 1000 - e.at > (S.cfg.stale || 3600)) return 'offline';
-  return e.state;
+  return normaliseState(e.state);
 }
 
 function render() {
@@ -150,15 +159,17 @@ function renderList(el, events, emptyText) {
     return;
   }
   el.innerHTML = events.map((e) => {
-    const label = e.state === 'closed' ? 'Confirmed closed'
-      : e.state === 'unconfirmed' ? "Couldn't confirm"
+    const st = normaliseState(e.state);
+    const label = st === 'closed' ? 'Confirmed closed'
+      : st === 'not_closed' ? 'Not closed'
+      : st === 'cant_check' ? "Couldn't check"
       : 'Checking…';
     const who = e.user ? cap(e.user) : 'Someone';
     const how = e.source === 'manual' ? 'checked from the app'
       : e.cached ? 'left home · reused recent check'
       : 'left home';
     return `<div class="item">
-      <span class="item-icon ${esc(e.state)}"><i></i></span>
+      <span class="item-icon ${esc(st)}"><i></i></span>
       <div class="item-body">
         <div class="item-title">${label}</div>
         <div class="item-sub">${esc(who)} ${esc(how)}${e.detail ? ' · ' + esc(e.detail) : ''}</div>
@@ -222,7 +233,7 @@ function connect() {
       const msg = JSON.parse(e.data);
       if (msg.event !== 'message') return;
       const ev = JSON.parse(msg.message);
-      if (ev.state === 'checking') {
+      if (normaliseState(ev.state) === 'checking') {
         S.checking = true;
         setCheckingUI(true);
       } else {

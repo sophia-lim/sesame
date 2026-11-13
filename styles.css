@@ -6,6 +6,7 @@
 :root {
   --green:  #30d158;
   --green-ink: #248a3d;
+  --red:    #ff3b30;
   --amber:  #ff9500;
   --amber-ink: #9a5a00;
   --blue:   #0a84ff;
@@ -175,15 +176,28 @@ input[type="text"]:focus { outline: 2px solid var(--blue); outline-offset: -1px;
   --hero-glow: rgba(48, 209, 88, .16);
   --hero-ink: var(--green-ink); --hero-dot: var(--green); --hero-halo: rgba(48, 209, 88, .18);
 }
-.hero.state-unconfirmed {
-  background: linear-gradient(160deg, #fff4e5, #ffe9cc);
-  border-color: rgba(255, 149, 0, .3);
-  --hero-glow: rgba(255, 149, 0, .2);
-  --hero-ink: var(--amber-ink); --hero-dot: var(--amber); --hero-halo: rgba(255, 149, 0, .22);
-  --hero-state-ink: var(--amber-ink);
-  --door-fill: #fffaf2; --door-line: #d89a4a; --door-slat: #f0cb96;
+/* Red, not amber: this is the state that should make you turn the car
+   around, and amber reads as "advisory" at a glance. */
+.hero.state-not_closed {
+  background: linear-gradient(160deg, #ffeceb, #ffdedb);
+  border-color: rgba(255, 59, 48, .32);
+  --hero-glow: rgba(255, 59, 48, .2);
+  --hero-ink: #b3261e; --hero-dot: var(--red); --hero-halo: rgba(255, 59, 48, .22);
+  --hero-state-ink: #b3261e;
+  --door-fill: #fff6f5; --door-line: #d1584e; --door-slat: #f2b3ad;
 }
-.hero.state-unconfirmed .hero-sub { color: #b07a2e; }
+.hero.state-not_closed .hero-sub { color: #a8443c; }
+
+/* Grey, deliberately unlike the red: a camera we cannot reach is a different
+   problem from a door we can see is open, and conflating them taught people
+   to ignore both. */
+.hero.state-cant_check {
+  background: linear-gradient(160deg, var(--card), color-mix(in srgb, var(--grey) 10%, var(--card)));
+  border-color: rgba(142, 142, 147, .3);
+  --hero-ink: #6c6c70; --hero-dot: var(--grey);
+  --hero-state-ink: color-mix(in srgb, var(--ink) 70%, var(--grey));
+  --door-line: #a8a8ad; --door-slat: #cdcdd2;
+}
 .hero.state-checking {
   background: linear-gradient(160deg, #eaf3ff, #dcebff);
   border-color: rgba(10, 132, 255, .22);
@@ -267,8 +281,10 @@ input[type="text"]:focus { outline: 2px solid var(--blue); outline-offset: -1px;
 .item-icon i { width: 11px; height: 11px; border-radius: 50%; display: block; }
 .item-icon.closed { background: rgba(48, 209, 88, .14); }
 .item-icon.closed i { background: var(--green); }
-.item-icon.unconfirmed { background: rgba(255, 149, 0, .14); }
-.item-icon.unconfirmed i { background: var(--amber); }
+.item-icon.not_closed { background: rgba(255, 59, 48, .14); }
+.item-icon.not_closed i { background: var(--red); }
+.item-icon.cant_check { background: rgba(142, 142, 147, .18); }
+.item-icon.cant_check i { background: var(--grey); }
 .item-icon.checking { background: rgba(10, 132, 255, .14); }
 .item-icon.checking i { background: var(--blue); }
 .item-body { flex: 1; min-width: 0; }

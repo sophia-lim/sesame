@@ -8,7 +8,8 @@
  */
 'use strict';
 
-const CACHE = 'sesame-v1';
+// Bumped when the shell changes, so installed phones drop the old copy.
+const CACHE = 'sesame-v2';
 const SHELL = [
   './',
   'index.html',
