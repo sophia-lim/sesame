@@ -271,9 +271,21 @@ function isInstalled() {
          window.navigator.standalone === true;
 }
 
+function isIOS() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
 async function registerPush({ silent = false } = {}) {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    if (!silent) toast('This browser cannot receive notifications.');
+    // On iOS, PushManager simply does not exist in Safari - it appears only
+    // once the app is opened from its Home Screen icon. Saying "this browser
+    // cannot receive notifications" is true but useless; the user needs to
+    // know they are one step away, in the wrong window.
+    if (!silent) {
+      toast(isIOS() && !isInstalled()
+        ? 'Open Sesame from its Home Screen icon and pair there \u2014 iPhones only allow notifications in the installed app, not in Safari.'
+        : 'This browser cannot receive notifications.', 7000);
+    }
     return false;
   }
   if (!S.cfg.vapid) {
@@ -326,18 +338,33 @@ async function registerPush({ silent = false } = {}) {
 function updatePushUI() {
   const supported = 'PushManager' in window;
   const granted = supported && Notification.permission === 'granted';
-  $('push-nag').hidden = granted || !supported;
+  $('push-nag').hidden = granted;
+
+  // Pairing in Safari leaves someone with a working-looking app that can
+  // never alert them, so say so where they will see it.
+  const inSafari = isIOS() && !isInstalled();
+  const nag = $('push-nag');
+  if (inSafari) {
+    nag.querySelector('div').innerHTML =
+      '<b>You are in Safari.</b><span>Add Sesame to your Home Screen and pair there, ' +
+      'or you will never get alerts.</span>';
+    nag.querySelector('button').hidden = true;
+  }
 
   const el = $('push-state');
-  if (!supported) { el.textContent = 'not supported'; el.className = 'row-value bad'; }
+  if (inSafari) { el.textContent = 'needs the Home Screen app'; el.className = 'row-value bad'; }
+  else if (!supported) { el.textContent = 'not supported'; el.className = 'row-value bad'; }
   else if (granted) { el.textContent = 'on'; el.className = 'row-value good'; }
-  else if (Notification.permission === 'denied') { el.textContent = 'blocked in iOS Settings'; el.className = 'row-value bad'; }
+  else if (Notification.permission === 'denied') {
+    el.textContent = isIOS() ? 'blocked in iOS Settings' : 'blocked in browser settings';
+    el.className = 'row-value bad';
+  }
   else { el.textContent = 'off'; el.className = 'row-value bad'; }
 }
 
 /* ------------------------------------------------------------------ UI bits */
 let toastTimer = null;
-function toast(text, ms = 3800) {
+function toast(text, ms = 3800) {  // ms: longer for instructions worth reading
   const el = $('toast');
   el.textContent = text;
   el.hidden = false;
@@ -367,8 +394,7 @@ function showSetup() {
   $('setup').hidden = false;
   $('app').hidden = true;
   // Only nag about installing on iOS, where it's a hard requirement.
-  const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  $('setup-install').hidden = !(iOS && !isInstalled());
+  $('setup-install').hidden = !(isIOS() && !isInstalled());
 }
 
 function tryPair(text) {

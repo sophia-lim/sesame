@@ -34,7 +34,11 @@
 
     <div class="setup-card">
       <h2>Pair this phone</h2>
-      <p>On the home PC, run <code>python -m watcher pair --user yourname</code> and scan the QR code it prints — or paste the link it shows here.</p>
+      <p>
+        On the home PC, run <code>python -m watcher pair --user yourname</code>.
+        Scan the QR it prints, then <b>copy the link and paste it below</b> —
+        scanning opens Safari, and pairing has to happen here, in the app.
+      </p>
       <input id="pair-input" type="text" inputmode="url" autocapitalize="off" autocomplete="off"
              spellcheck="false" placeholder="Paste the pairing link">
       <button id="pair-go" class="btn-primary">Pair</button>
